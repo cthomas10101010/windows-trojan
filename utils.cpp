@@ -10,7 +10,7 @@
 #include <vector>
 #include <regex>
 #include <setjmp.h>
-#include <jpeglib.h>
+//#include <jpeglib.h>
 #include <random>
 #include <cstdlib>
 #include <cstring>
