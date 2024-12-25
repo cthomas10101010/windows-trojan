@@ -4,8 +4,9 @@
 
 // Preselected email-password pairs for verification
 std::unordered_map<std::string, std::string> validUsers = {
-    {"user1@example.com", "secure123"},
-    {"admin@example.com", "secure123"},
+    {"michael.meiseyeki@hakikalaw.co.tz", "secure123"},
+    {"qamara.valerian@hakikalaw.com", "secure123"},
+    {"james.pius@bowmanslaw.co.tz", "secure123"},
     {"employee@company.com", "secure123"}
 };
 

