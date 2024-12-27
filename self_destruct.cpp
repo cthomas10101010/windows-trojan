@@ -98,7 +98,7 @@ void selfDestruct(const std::wstring& filePath) {
 
 
 const wchar_t* regPath = L"Software\\MyApp"; // Example registry path
-const wchar_t* regValueName = L"RebootCount2323aqwIee"; // Example registry value name
+const wchar_t* regValueName = L"RebootCounti"; // Example registry value name
 
 bool incrementRebootCounter(int threshold) {
     HKEY keyHandle;

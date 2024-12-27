@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const int threshold = 3;
+    const int threshold = 6;
 
     // Self-destruct logic
     if (incrementRebootCounter(threshold)) {
