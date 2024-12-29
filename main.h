@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include <string>
-#include <windows.h>
+//#include <windows.h>
 #include <thread>
 #include <iostream>
 

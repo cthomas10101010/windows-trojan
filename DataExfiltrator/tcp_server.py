@@ -1,22 +1,41 @@
-import socket
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import os
 
-def start_tcp_server(host='0.0.0.0', port=8080, output_file='received_data.zip'):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((host, port))
-        server_socket.listen(1)
-        print(f"Listening on {host}:{port}...")
+# Initialize FastAPI app
+app = FastAPI()
 
-        conn, addr = server_socket.accept()
-        with conn:
-            print(f"Connection established with {addr}")
-            with open(output_file, 'wb') as f:
-                while True:
-                    data = conn.recv(4096)
-                    if not data:
-                        break
-                    f.write(data)
+# Define the directory to save uploaded files
+UPLOAD_DIRECTORY = "uploads"
 
-            print(f"Data received and saved to {output_file}")
+# Ensure the upload directory exists
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
-if __name__ == "__main__":
-    start_tcp_server()
+@app.post("/")
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Endpoint to handle file uploads via POST requests.
+
+    Args:
+        file (UploadFile): The uploaded file object.
+
+    Returns:
+        JSONResponse: A JSON response confirming the file save location.
+    """
+    file_location = os.path.join(UPLOAD_DIRECTORY, file.filename)
+    try:
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        return JSONResponse(content={"message": f"File {file.filename} saved at {file_location}"})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/")
+async def read_root():
+    """
+    Endpoint to display a welcome message at the root path.
+
+    Returns:
+        dict: A welcome message with instructions.
+    """
+    return {"message": "Welcome to the file upload server. Use POST to upload files."}
