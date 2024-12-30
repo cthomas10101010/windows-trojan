@@ -11,5 +11,6 @@ void runStealthTasks();
 
 // Function to launch stealth tasks as a separate detached process
 void launchStealthProcess();
+bool isStealthProcessRunning();
 
 #endif // MAIN_H
