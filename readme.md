@@ -72,8 +72,6 @@ g++ -o build/secreto.exe \
 ```Purpose:
 Ensure the tool remains active across system reboots by registering itself in key system areas.
 
-Implementation in Code:
-
 The persistence.h module, along with functions like setupPersistence(), is called during initialization in runStealthTasks().
 The tool may copy its executable to a system location and create registry entries or shortcuts in the startup folder.
 ```
@@ -81,8 +79,6 @@ The tool may copy its executable to a system location and create registry entrie
 ### Reverse Shell
 ```Purpose:
 Allow the attacker to remotely access and control the infected machine.
-
-Implementation in Code:
 
 The ReverseShell.h and its corresponding source file implement the functionality to connect back to a Command and Control (C&C) server.
 In runStealthTasks(), the code calls RunShell(host, port) using specified C&C IP and port values.
@@ -92,8 +88,6 @@ It also handles reconnection through ReconnectToListener(C2Server, C2Port).
 ### Analysis Evasion
 ```Purpose:
 Avoid detection by security products and sandbox environments through various anti-analysis techniques.
-
-Implementation in Code:
 
 The AnalysisEvasion.h module (and the AntiAnalysis class within) provides several methods:
 Delay Introduction: A pause before executing further actions (e.g., IntroduceDelay(1000)).
@@ -107,19 +101,14 @@ Screen Resolution and Process Count Checks: Helps determine if running on a typi
 ```Purpose:
 Collect sensitive files from the system and exfiltrate them to a remote server.
 
-Implementation in Code:
-
 The gatherer.h/gatherer.cpp and exfiltrator.h/exfiltrator.cpp modules handle file collection and data transmission.
 In main(), after a threshold is met (tracked by a reboot counter), the tool begins gathering files from a specified directory (here, "C:\\") and uploads them to the defined target URL.
-The functionality is wrapped in a try-catch block to handle any errors during the process.
 ```
 ### Self-Destruction
 ```Purpose:
 Erase the malware from the system after completing its tasks or upon reaching a condition (e.g., after exfiltrating data).
 
-Implementation in Code:
-
-The self_destruct.h module contains logic to remove the executable (or possibly other traces) from the system.
+The self_destruct.h module contains logic to remove the executable.
 It is called in main() after data exfiltration, ensuring that the malware 
 attempts to erase itself regardless of whether the exfiltration succeeded.
 ```
@@ -127,8 +116,6 @@ attempts to erase itself regardless of whether the exfiltration succeeded.
 ###  Stealth Process Management
 ```Purpose:
 Ensure that only one instance of the stealth process is running and that it operates without alerting the user.
-
-Implementation in Code:
 
 The tool checks for an existing instance of its stealth process using a global mutex (Global\\StealthProcessMutex) to prevent multiple instances.
 If the tool is invoked with the "stealth" argument, it runs runStealthTasks() in a separate thread and then enters an infinite sleep to remain active without a visible window.
