@@ -1,14 +1,15 @@
 # Malware Stealth Injector
 
 ## Project Overview
-This program is a stealth malware injector designed to evade analysis, maintain persistence, and establish reverse shell connections. The code leverages various anti-analysis techniques, persistence mechanisms, and remote command execution capabilities.
+This program is a stealth malware injector designed to evade analysis, maintain persistence, establish reverse shell connections, automate the exfiltration of relevant files, and then delete itself after a predetermined number of reboots. The code leverages various anti-analysis techniques, persistence mechanisms, and remote command execution capabilities.
 
 ### Key Features
 - **Stealth Execution**: Runs as a hidden process.
 - **Anti-Analysis**: Checks for debuggers, sandboxes, and virtual machines to avoid detection.
 - **Persistence**: Ensures the malware is executed during system startup
 - **Reverse Shell**: Establishes a reverse shell connection to a specified C2 server.
-- **Self Destruct**: Deletes itself after a predetermined number of reboots 
+- **Self Destruct**: Deletes itself after a predetermined number of reboots
+- **Data Exfil**: Automates the extraction of sensitive files to a remote server.
 
 ## File Structure
 ```
@@ -77,9 +78,7 @@ g++ -o build/secreto.exe \
 
 ### Persistence
 ```Purpose:
-Ensure the tool remains active across system reboots by registering itself in key system areas.
-
-The persistence.h module, along with functions like setupPersistence(), is called during initialization in runStealthTasks() and  copy its executable to a system location and create registry entries or shortcuts in the startup folder.
+To ensure the tool remains active across system reboots, it leverages robust persistence mechanisms by registering itself in critical system areas such as the Windows Registry, startup folders, and scheduled tasks. The persistence.h module, with functions like setupPersistence(), is invoked during the runStealthTasks() initialization process. This module copies the executable to a secure system location and establishes persistence through the creation of registry keys or startup folder shortcuts, guaranteeing uninterrupted operation.
 ```
 
 ### Reverse Shell
