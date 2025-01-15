@@ -14,22 +14,29 @@ This program is a stealth malware injector designed to evade analysis, maintain 
 ```
 ProjectDirectory/
 │
+├── build/
+│   └── resource.o
+│
 ├── include/
 │   ├── main.h
 │   ├── Authenticator.h
 │   ├── Utilities.h
 │   ├── Paths.h
 │   ├── AnalysisEvasion.h
-│   └── ReverseShell.h
+│   ├── ReverseShell.h
+│   └── persistence.h
 │
-└── src/
-    ├── main.cpp
-    ├── Authenticator.cpp
-    ├── Utilities.cpp
-    ├── Paths.cpp
-    ├── AnalysisEvasion.cpp
-    ├── persistence.cpp
-    └── ReverseShell.cpp
+├── src/
+│   ├── main.cpp
+│   ├── Authenticator.cpp
+│   ├── Utilities.cpp
+│   ├── Paths.cpp
+│   ├── AnalysisEvasion.cpp
+│   ├── persistence.cpp
+│   ├── ReverseShell.cpp
+│   ├── self_destruct.cpp
+│   ├── exfiltrator.cpp
+│   └── gatherer.cpp
 ```
 
 ## Compilation Instructions
