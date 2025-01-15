@@ -72,8 +72,7 @@ g++ -o build/secreto.exe \
 ```Purpose:
 Ensure the tool remains active across system reboots by registering itself in key system areas.
 
-The persistence.h module, along with functions like setupPersistence(), is called during initialization in runStealthTasks().
-The tool may copy its executable to a system location and create registry entries or shortcuts in the startup folder.
+The persistence.h module, along with functions like setupPersistence(), is called during initialization in runStealthTasks() and  copy its executable to a system location and create registry entries or shortcuts in the startup folder.
 ```
 
 ### Reverse Shell
